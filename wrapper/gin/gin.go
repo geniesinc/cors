@@ -1,12 +1,12 @@
 // Package cors/wrapper/gin provides gin.HandlerFunc to handle CORS related
-// requests as a wrapper of github.com/rs/cors handler.
+// requests as a wrapper of github.com/axiomzen/cors/v2 handler.
 package gin
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/cors"
+	"github.com/axiomzen/cors/v2"
 )
 
 // Options is a configuration container to setup the CORS middleware.

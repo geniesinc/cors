@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	cors "github.com/rs/cors/wrapper/gin"
+	cors "github.com/axiomzen/cors/v2/wrapper/gin"
 )
 
 func main() {

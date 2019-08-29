@@ -21,6 +21,7 @@ The resulting handler is a standard net/http handler.
 package cors
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -74,10 +75,18 @@ type Logger interface {
 	Printf(string, ...interface{})
 }
 
+// LoggerExtractor extracts a logger from a context
+type LoggerExtractor func(context.Context) Logger
+
+// DefaultLoggerExtractor provides a standard library logger
+var DefaultLoggerExtractor = func(context.Context) Logger {
+	return log.New(os.Stdout, "[cors] ", log.LstdFlags)
+}
+
 // Cors http handler
 type Cors struct {
 	// Debug logger
-	Log Logger
+	Log LoggerExtractor
 	// Normalized list of plain allowed origins
 	allowedOrigins []string
 	// List of allowed origins containing wildcards
@@ -112,7 +121,7 @@ func New(options Options) *Cors {
 		optionPassthrough:      options.OptionsPassthrough,
 	}
 	if options.Debug && c.Log == nil {
-		c.Log = log.New(os.Stdout, "[cors] ", log.LstdFlags)
+		c.Log = DefaultLoggerExtractor
 	}
 
 	// Normalize options
@@ -202,7 +211,7 @@ func AllowAll() *Cors {
 func (c *Cors) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-			c.logf("Handler: Preflight request")
+			c.logf(r.Context(), "Handler: Preflight request")
 			c.handlePreflight(w, r)
 			// Preflight requests are standalone and should stop the chain as some other
 			// middleware may not handle OPTIONS requests correctly. One typical example
@@ -214,7 +223,7 @@ func (c *Cors) Handler(h http.Handler) http.Handler {
 				w.WriteHeader(http.StatusOK)
 			}
 		} else {
-			c.logf("Handler: Actual request")
+			c.logf(r.Context(), "Handler: Actual request")
 			c.handleActualRequest(w, r)
 			h.ServeHTTP(w, r)
 		}
@@ -224,10 +233,10 @@ func (c *Cors) Handler(h http.Handler) http.Handler {
 // HandlerFunc provides Martini compatible handler
 func (c *Cors) HandlerFunc(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-		c.logf("HandlerFunc: Preflight request")
+		c.logf(r.Context(), "HandlerFunc: Preflight request")
 		c.handlePreflight(w, r)
 	} else {
-		c.logf("HandlerFunc: Actual request")
+		c.logf(r.Context(), "HandlerFunc: Actual request")
 		c.handleActualRequest(w, r)
 	}
 }
@@ -235,7 +244,7 @@ func (c *Cors) HandlerFunc(w http.ResponseWriter, r *http.Request) {
 // Negroni compatible interface
 func (c *Cors) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-		c.logf("ServeHTTP: Preflight request")
+		c.logf(r.Context(), "ServeHTTP: Preflight request")
 		c.handlePreflight(w, r)
 		// Preflight requests are standalone and should stop the chain as some other
 		// middleware may not handle OPTIONS requests correctly. One typical example
@@ -247,7 +256,7 @@ func (c *Cors) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Handl
 			w.WriteHeader(http.StatusOK)
 		}
 	} else {
-		c.logf("ServeHTTP: Actual request")
+		c.logf(r.Context(), "ServeHTTP: Actual request")
 		c.handleActualRequest(w, r)
 		next(w, r)
 	}
@@ -257,35 +266,36 @@ func (c *Cors) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Handl
 func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
 	headers := w.Header()
 	origin := r.Header.Get("Origin")
+	ctx := r.Context()
 
 	if r.Method != http.MethodOptions {
-		c.logf("  Preflight aborted: %s!=OPTIONS", r.Method)
+		c.logf(ctx, "  Preflight aborted: %s!=OPTIONS", r.Method)
 		return
 	}
 	// Always set Vary headers
-	// see https://github.com/rs/cors/issues/10,
-	//     https://github.com/rs/cors/commit/dbdca4d95feaa7511a46e6f1efb3b3aa505bc43f#commitcomment-12352001
+	// see https://github.com/axiomzen/cors/v2/issues/10,
+	//     https://github.com/axiomzen/cors/v2/commit/dbdca4d95feaa7511a46e6f1efb3b3aa505bc43f#commitcomment-12352001
 	headers.Add("Vary", "Origin")
 	headers.Add("Vary", "Access-Control-Request-Method")
 	headers.Add("Vary", "Access-Control-Request-Headers")
 
 	if origin == "" {
-		c.logf("  Preflight aborted: empty origin")
+		c.logf(ctx, "  Preflight aborted: empty origin")
 		return
 	}
 	if !c.isOriginAllowed(r, origin) {
-		c.logf("  Preflight aborted: origin '%s' not allowed", origin)
+		c.logf(ctx, "  Preflight aborted: origin '%s' not allowed", origin)
 		return
 	}
 
 	reqMethod := r.Header.Get("Access-Control-Request-Method")
 	if !c.isMethodAllowed(reqMethod) {
-		c.logf("  Preflight aborted: method '%s' not allowed", reqMethod)
+		c.logf(ctx, "  Preflight aborted: method '%s' not allowed", reqMethod)
 		return
 	}
 	reqHeaders := parseHeaderList(r.Header.Get("Access-Control-Request-Headers"))
 	if !c.areHeadersAllowed(reqHeaders) {
-		c.logf("  Preflight aborted: headers '%v' not allowed", reqHeaders)
+		c.logf(ctx, "  Preflight aborted: headers '%v' not allowed", reqHeaders)
 		return
 	}
 	if c.allowedOriginsAll {
@@ -308,22 +318,23 @@ func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
 	if c.maxAge > 0 {
 		headers.Set("Access-Control-Max-Age", strconv.Itoa(c.maxAge))
 	}
-	c.logf("  Preflight response headers: %v", headers)
+	c.logf(ctx, "  Preflight response headers: %v", headers)
 }
 
 // handleActualRequest handles simple cross-origin requests, actual request or redirects
 func (c *Cors) handleActualRequest(w http.ResponseWriter, r *http.Request) {
 	headers := w.Header()
 	origin := r.Header.Get("Origin")
+	ctx := r.Context()
 
-	// Always set Vary, see https://github.com/rs/cors/issues/10
+	// Always set Vary, see https://github.com/axiomzen/cors/v2/issues/10
 	headers.Add("Vary", "Origin")
 	if origin == "" {
-		c.logf("  Actual request no headers added: missing origin")
+		c.logf(ctx, "  Actual request no headers added: missing origin")
 		return
 	}
 	if !c.isOriginAllowed(r, origin) {
-		c.logf("  Actual request no headers added: origin '%s' not allowed", origin)
+		c.logf(ctx, "  Actual request no headers added: origin '%s' not allowed", origin)
 		return
 	}
 
@@ -332,7 +343,7 @@ func (c *Cors) handleActualRequest(w http.ResponseWriter, r *http.Request) {
 	// spec doesn't instruct to check the allowed methods for simple cross-origin requests.
 	// We think it's a nice feature to be able to have control on those methods though.
 	if !c.isMethodAllowed(r.Method) {
-		c.logf("  Actual request no headers added: method '%s' not allowed", r.Method)
+		c.logf(ctx, "  Actual request no headers added: method '%s' not allowed", r.Method)
 
 		return
 	}
@@ -347,13 +358,13 @@ func (c *Cors) handleActualRequest(w http.ResponseWriter, r *http.Request) {
 	if c.allowCredentials {
 		headers.Set("Access-Control-Allow-Credentials", "true")
 	}
-	c.logf("  Actual response added headers: %v", headers)
+	c.logf(ctx, "  Actual response added headers: %v", headers)
 }
 
 // convenience method. checks if a logger is set.
-func (c *Cors) logf(format string, a ...interface{}) {
+func (c *Cors) logf(ctx context.Context, format string, a ...interface{}) {
 	if c.Log != nil {
-		c.Log.Printf(format, a...)
+		c.Log(ctx).Printf(format, a...)
 	}
 }
 

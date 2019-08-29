@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/codegangsta/negroni"
-	"github.com/rs/cors"
+	"github.com/axiomzen/cors/v2"
 )
 
 func main() {

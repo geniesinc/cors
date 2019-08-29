@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
-	"github.com/rs/cors"
+	"github.com/axiomzen/cors/v2"
 )
 
 func main() {

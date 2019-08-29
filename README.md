@@ -1,4 +1,4 @@
-# Go CORS handler [![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/rs/cors) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/rs/cors/master/LICENSE) [![build](https://img.shields.io/travis/rs/cors.svg?style=flat)](https://travis-ci.org/rs/cors) [![Coverage](http://gocover.io/_badge/github.com/rs/cors)](http://gocover.io/github.com/rs/cors)
+# Go CORS handler [![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/axiomzen/cors/v2) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/rs/cors/master/LICENSE) [![build](https://img.shields.io/travis/rs/cors.svg?style=flat)](https://travis-ci.org/rs/cors) [![Coverage](http://gocover.io/_badge/github.com/axiomzen/cors/v2)](http://gocover.io/github.com/axiomzen/cors/v2)
 
 CORS is a `net/http` handler implementing [Cross Origin Resource Sharing W3 specification](http://www.w3.org/TR/cors/) in Golang.
 
@@ -12,7 +12,7 @@ package main
 import (
     "net/http"
 
-    "github.com/rs/cors"
+    "github.com/axiomzen/cors/v2"
 )
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 
 Install `cors`:
 
-    go get github.com/rs/cors
+    go get github.com/axiomzen/cors/v2
 
 Then run your server:
 
@@ -51,24 +51,24 @@ The server now runs on `localhost:8080`:
 
 ### Allow * With Credentials Security Protection
 
-This library has been modified to avoid a well known security issue when configured with `AllowedOrigins` to `*` and `AllowCredentials` to `true`. Such setup used to make the library reflects the request `Origin` header value, working around a security protection embedded into the standard that makes clients to refuse such configuration. This behavior has been removed with [#55](https://github.com/rs/cors/issues/55) and [#57](https://github.com/rs/cors/issues/57).
+This library has been modified to avoid a well known security issue when configured with `AllowedOrigins` to `*` and `AllowCredentials` to `true`. Such setup used to make the library reflects the request `Origin` header value, working around a security protection embedded into the standard that makes clients to refuse such configuration. This behavior has been removed with [#55](https://github.com/axiomzen/cors/v2/issues/55) and [#57](https://github.com/axiomzen/cors/v2/issues/57).
 
 If you depend on this behavior and understand the implications, you can restore it using the `AllowOriginFunc` with `func(origin string) {return true}`.
 
-Please refer to [#55](https://github.com/rs/cors/issues/55) for more information about the security implications.
+Please refer to [#55](https://github.com/axiomzen/cors/v2/issues/55) for more information about the security implications.
 
 ### More Examples
 
-* `net/http`: [examples/nethttp/server.go](https://github.com/rs/cors/blob/master/examples/nethttp/server.go)
-* [Goji](https://goji.io): [examples/goji/server.go](https://github.com/rs/cors/blob/master/examples/goji/server.go)
-* [Martini](http://martini.codegangsta.io): [examples/martini/server.go](https://github.com/rs/cors/blob/master/examples/martini/server.go)
-* [Negroni](https://github.com/codegangsta/negroni): [examples/negroni/server.go](https://github.com/rs/cors/blob/master/examples/negroni/server.go)
-* [Alice](https://github.com/justinas/alice): [examples/alice/server.go](https://github.com/rs/cors/blob/master/examples/alice/server.go)
-* [HttpRouter](https://github.com/julienschmidt/httprouter): [examples/httprouter/server.go](https://github.com/rs/cors/blob/master/examples/httprouter/server.go)
-* [Gorilla](http://www.gorillatoolkit.org/pkg/mux): [examples/gorilla/server.go](https://github.com/rs/cors/blob/master/examples/gorilla/server.go)
-* [Buffalo](https://gobuffalo.io): [examples/buffalo/server.go](https://github.com/rs/cors/blob/master/examples/buffalo/server.go)
-* [Gin](https://gin-gonic.github.io/gin): [examples/gin/server.go](https://github.com/rs/cors/blob/master/examples/gin/server.go)
-* [Chi](https://github.com/go-chi/chi): [examples/chi/server.go](https://github.com/rs/cors/blob/master/examples/chi/server.go)
+* `net/http`: [examples/nethttp/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/nethttp/server.go)
+* [Goji](https://goji.io): [examples/goji/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/goji/server.go)
+* [Martini](http://martini.codegangsta.io): [examples/martini/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/martini/server.go)
+* [Negroni](https://github.com/codegangsta/negroni): [examples/negroni/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/negroni/server.go)
+* [Alice](https://github.com/justinas/alice): [examples/alice/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/alice/server.go)
+* [HttpRouter](https://github.com/julienschmidt/httprouter): [examples/httprouter/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/httprouter/server.go)
+* [Gorilla](http://www.gorillatoolkit.org/pkg/mux): [examples/gorilla/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/gorilla/server.go)
+* [Buffalo](https://gobuffalo.io): [examples/buffalo/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/buffalo/server.go)
+* [Gin](https://gin-gonic.github.io/gin): [examples/gin/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/gin/server.go)
+* [Chi](https://github.com/go-chi/chi): [examples/chi/server.go](https://github.com/axiomzen/cors/v2/blob/master/examples/chi/server.go)
 
 ## Parameters
 
@@ -97,7 +97,7 @@ handler = c.Handler(handler)
 * **OptionsPassthrough** `bool`: Instructs preflight to let other potential next handlers to process the `OPTIONS` method. Turn this on if your application handles `OPTIONS`.
 * **Debug** `bool`: Debugging flag adds additional output to debug server side CORS issues.
 
-See [API documentation](http://godoc.org/github.com/rs/cors) for more info.
+See [API documentation](http://godoc.org/github.com/axiomzen/cors/v2) for more info.
 
 ## Benchmarks
 
@@ -112,4 +112,4 @@ See [API documentation](http://godoc.org/github.com/rs/cors) for more info.
 
 ## Licenses
 
-All source code is licensed under the [MIT License](https://raw.github.com/rs/cors/master/LICENSE).
+All source code is licensed under the [MIT License](https://raw.github.com/axiomzen/cors/v2/master/LICENSE).

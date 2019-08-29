@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/cors"
+	"github.com/axiomzen/cors/v2"
 )
 
 func init() {
