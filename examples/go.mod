@@ -3,6 +3,7 @@ module github.com/axiomzen/cors/v2/examples
 go 1.12
 
 require (
+	github.com/axiomzen/cors/v2 v2.0.0
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0 // indirect
 	github.com/codegangsta/negroni v1.0.0
 	github.com/gin-gonic/gin v1.4.0
