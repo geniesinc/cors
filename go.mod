@@ -1,3 +1,3 @@
-module github.com/axiomzen/cors/v2
+module github.com/geniesinc/cors/v2
 
 go 1.12
